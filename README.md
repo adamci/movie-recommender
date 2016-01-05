@@ -1,7 +1,8 @@
 Movie Recommender
 =================
 
-# INTRODUCTION
+Introduction
+------------
 The following is my final project for a class I took in the fall of 2015 called
 CPSC 458: Automated Decision Systems.
 
@@ -25,14 +26,16 @@ the input user with a set of k dataset users.
 As an additional exercise at the end of my project, I attempted to construct
 an evaluation function for my recommendation system.
 
-# Usage
+Usage
+-----
 1. cd into the repository before running R
 2. Run 'source("main.R")'
 3. Run the main() function, either with an argument, which should be a path
    to your csv file of preferences, or no argument, which runs the demo
 
 
-# DEMO RUN
+Demo Run
+--------
 	> source("main.R")
 	> main()
 
@@ -126,7 +129,8 @@ an evaluation function for my recommendation system.
 		~ Great Dictator, The (1940)
 		~ Life Is Beautiful (La Vita è bella) (1997)
 
-# IMPLEMENTATION
+Implementation
+--------------
 My project is divided into four folders
 * datasets/ contains two copies of the smaller MovieLens dataset, one for
   running normally, and one for my test() function. Within the ml-latest-small,
