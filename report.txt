@@ -1,0 +1,440 @@
+Adam Cimpeanu
+Final Project
+CPSC 458: Automated Decision Systems
+Professor Stephen Slade
+
+
+
+				README
+
+
+INTRODUCTION
+================================================================================
+The importance of recommender systems was publicly recognized in 2009, when
+Netflix awarded a $1 million prize to the first team that was able to build
+a system that provided recommendations that were 10% better than the company’s
+own.
+
+I wanted to use this final project as an opportunity to learn about how
+recommender systems work. To this end, I implmented a collaborative filtering
+system that recommends films based on drawing associations between users of
+similar tastes using a varation of the k-nearest neighbors algorithm. As input,
+the system takes a csv file that lists a couple of films that the user has seen
+paired with their rating of that film on a scale from 0 to 5.0 (see sample
+input files in final_project/demo).
+
+As the dataset for the Netflix Prize was pulled off the web, I used the
+MovieLens dataset, compiled by GroupLens research through their movie
+recommendations website, http://movielens.org. Their most updated datasets come
+in two sizes, the smaller of which is included in my project folder under
+final_project/datasets/ml-latest-small. My project and demo runs on the smaller
+dataset, but with enough patience, the larger one works as well. The MovieLens
+dataset was most useful for building the collaborative filtering system as I had
+a wealth of data on user ratings, which gives me better confidence in my ability
+to match the input user with a set of k dataset users.
+
+As an additional exercise at the end of my project, I attempted to construct
+an evaluation function for my recommendation system. The results from this
+experiment where not superb, which isn't surpring, given that building a
+powerful recommender is challenging and testing it is just as difficult.
+
+
+
+DEMO RUN
+================================================================================
+NOTES:
+	> Don't forget to cd into final_project/src before running R
+	> My project requires no additional packages. Just R.
+
+
+
+> source("main.R")
+> main()
+
+
+
+Multiple results were returned for you query 'Elf'
+Enter a number from 0 to 7 to choose an option from the list
+[0] My movie isn't in this list
+[1] Twelfth Night (1996)
+[2] Me Myself I (2000)
+[3] Me, Myself & Irene (2000)
+[4] Elf (2003)
+[5] Wilbur Wants to Kill Himself (2002)
+[6] Bill Cosby, Himself (1983)
+[7] Life Itself (2014)
+4
+
+
+
+Multiple results were returned for you query 'About Time'
+Enter a number from 0 to 3 to choose an option from the list
+[0] My movie isn't in this list
+[1] Amityville 1992: It's About Time (1992)
+[2] Frequently Asked Questions About Time Travel (2009)
+[3] About Time (2013)
+3
+
+
+
+Multiple results were returned for you query 'Rent'
+Enter a number from 0 to 15 to choose an option from the list
+ [0] My movie isn't in this list
+ [1] Rent-a-Kid (1995)
+ [2] Parent Trap, The (1961)
+ [3] Parent Trap, The (1998)
+ [4] Monty Python's And Now for Something Completely Different (1971)
+ [5] Different for Girls (1996)
+ [6] Parenthood (1989)
+ [7] Blood Spattered Bride, The (La novia ensangrentada) (1972)
+ [8] Rent-A-Cop (1988)
+ [9] Meet the Parents (2000)
+[10] Summer Rental (1985)
+[11] Parents (1989)
+[12] Undercurrent (1946)
+[13] Rent (2005)
+[14] Sorcerer's Apprentice, The (2010)
+[15] Inherent Vice (2014)
+13
+
+
+
+Performing collaborative filtering..........
+Selecting from similar user's favorites..........
+Do you want to filter your results by genre? [y/n]
+y
+
+Pick a genre by selecting a number from 1 to 19:
+ [1] Action
+ [2] Adventure
+ [3] Animation
+ [4] Children
+ [5] Comedy
+ [6] Crime
+ [7] Documentary
+ [8] Drama
+ [9] Fantasy
+[10] Film-Noir
+[11] Horror
+[12] IMAX
+[13] Musical
+[14] Mystery
+[15] Romance
+[16] Sci-Fi
+[17] Thriller
+[18] War
+[19] Western
+5
+
+
+Using your personal ratings, we found 10 users that are most like you
+and present you with a list of their 10 favorite Comedy movies,
+sorted by their scores and how closely your interests line up:
+	~ Stranger than Fiction (2006)
+	~ Hangover, The (2009)
+	~ Kung Fury (2015)
+	~ Inside Out (2015)
+	~ Rushmore (1998)
+	~ Royal Tenenbaums, The (2001)
+	~ My Night At Maud's (Ma Nuit Chez Maud) (1969)
+	~ Pulp Fiction (1994)
+	~ Great Dictator, The (1940)
+	~ Life Is Beautiful (La Vita è bella) (1997)
+
+
+
+
+IMPLEMENTATION
+================================================================================
+My project is divided into four folders
+	> final_project/datasets contains two copies of the smaller MovieLens
+          dataset, one for running normally, and one for my test() function.
+          Within the ml-latest-small, I use two files. movies.csv contains
+          a list of movies with a corresponding unique movieId, and genre.
+          ratings.csv contains the ratings of 718 users of the MovieLens
+          website
+	> final_project/src contains all the source code for the project
+	> final_project/demo contains some sample input files for the program,
+          the first of which is used as the default program input for my
+          recommender system
+	> final_project/test contains test input and output for my evaluation
+          function
+
+Within final_project/src, there are six R scripts.
+
+const.R
+=======
+This file contains a number of hard-coded strings that are paths to different
+csv files in the test and regular datasets. It also contains a number of
+constants used in the k-NN algorithm and in the filtering of results from
+most similar users. The meaning of the constants will be explained as they
+appear in the code. Note that this file is included in nearly all the other
+scripts.
+
+
+main.R
+======
+For running the recommender system, this file contains the main entrypoint.
+As per the demo above, main() is what runs the recommendation system. It can
+taken an argument, which is a path to a user profile, a csv file with movies
+and ratings for those films. Note that the function reads in the user data as
+a data frame, and converts the column of names to a column of movieIds using
+the str_to_movieId function in the query.R script. These movieId values
+uniquely identify all movies in the MovieLens dataset, and so are the best way
+of dealing with movies in my project. At this point, we have a data frame with
+a column of movieIds and a column of ratings. This gets passed into the knn()
+function which peforms the k-nearest neightbors algorithm to return a list of
+the k users whose profiles are most like the person using the recommender. This
+list is then passed into combine_users_favorites(), which essentially outputs
+a subset of the favorite movies of all the users suggested by knn().
+filter_by_genre() picks up this list and limits the results to a single genre
+if that's necessary. From there, at most 'nrecs' recommendations are presented
+to the user as the final output, where 'nrecs' is defined in const.R. The
+main() function finishes by giving a short explanation for how the movies
+were selected.
+
+
+query.R
+=======
+This script contains utilities for accessing columns of the movies.csv dataset.
+The largest of which is str_to_movieId. It takes a movie title, as written by
+the user, and tries to convert it into the unique movieId that's recognizable
+by the MovieLens dataset. The inputted movie string is stripped of all
+non-alphanumeric characters, and is then converted into a perl-style regex
+string that is read by a grep function. Essentially, grep looks for all the
+movies that contain all of the words, irrespective of case, that the user
+inputted. The function will then warn the user if nothing is returned. If
+more than 25 movies match the query, the user is asked to refine the movie
+title. Otherwise, the user is presented with a list of the possible movie
+titles that could correspond to the query 'movie_title'. The user selects
+one of the options (or none of them), and if this all works, the function
+returns the movieId of the movie represented in the string movie_title. The
+last two functions allow one to convert from movieId to movie name or genre,
+and their length illustrate the power of knowing the movieId of a movie.
+
+Note that the querying piece in str_to_movieId forms a substantial part of the
+user experience when using the recommender system. The system could have made
+more assumptions about the actual intensions of the user when reading
+'movie_title', but I decided to design the system so that it's more cautious,
+as I think there's a high premium on making sure that the movie recommender
+system knows exactly which movies the user has rated and inputted.
+
+
+knn.R
+=====
+Many collaborative filtering systems use k-NN to produce most similar users.
+I ran into a number of challenges when designing my algorithm, as a naive
+approach to calculating distance didn't quite work. Imagine representing
+each user as vector of length N, where N is the total number of movies. Each
+user has a rating or no rating for a given movie, which makes these vectors
+very sparse. Simply taking a Euclidean distance between these user vectors
+didn't make sense because it penalized those dataset users who had seen more
+films. It also didn't make sense to subtract coordinates if one of the users
+hadn't seen the film.
+
+Thus, when calculating distance, my k-NN algorithm only looks at films that
+both the user of the program and a given dataset user have seen. The result
+is a kind of selective Euclidean distance. There were two modifications that
+I added as part of an extensive effort to fine-tune my results.
+
+The first thing I noticed was that the system gave unreasonable preference
+to those users that had one or two perfect matches (in terms of movies and
+scores), when really I wanted to look for dataset users who had seen a lot
+of the same movies and had given similar enough scores. Thus, the last
+adjust for distance is to divide by the number of matches between the program
+user and the dataset user. This value is further raised to the power
+'match_factor' (defined in const.R) to amplify this effect. Looking at a
+sample dataframe below, where the first column is userId, and the second
+column is my distance measure, you can notice that rows 5 to 14 contained
+datapoints that only had only one movie in common with the same score; not
+great user output for k-NN. Introducing my scaling factor placed these users
+far behind those with more matches.
+
+	[[1]]
+	[1] 163.00000000   0.07654655
+
+	[[2]]
+	[1] 291.00000000   0.08838835
+
+	[[3]]
+	[1] 513.00000000   0.08838835
+
+	[[4]]
+	[1] 238.00000000   0.09622504
+
+	[[5]]
+	[1] 65.0  0.1
+
+	[[6]]
+	[1] 90.0  0.1
+
+	[[7]]
+	[1] 138.0   0.1
+
+	[[8]]
+	[1] 139.0   0.1
+
+	[[9]]
+	[1] 197.0   0.1
+
+	[[10]]
+	[1] 231.0   0.1
+
+	[[11]]
+	[1] 498.0   0.1
+
+	[[12]]
+	[1] 555.0   0.1
+
+	[[13]]
+	[1] 631.0   0.1
+
+	[[14]]
+	[1] 715.0   0.1
+
+	[[15]]
+	[1] 655.000000   0.124226
+
+	[[16]]
+	[1] 346.000   0.125
+
+	[[17]]
+	[1] 436.000   0.125
+
+	[[18]]
+	[1] 686.000   0.125
+
+	[[19]]
+	[1] 386.0000000   0.1288471
+
+	[[20]]
+	[1] 526.0000000   0.1324916
+
+
+Another necessary refinement was to add a small penalty, 'epsilon' to those
+users that ended up with a distance of 0 because they often weren't the best
+results for k-NN. All this fine tuning can be modified by changing the values
+in const.R.
+
+With this knowledge in mind, the flow of knn.R might make more sense. All
+user reviews are scanned, and we look for all the movies that a given dataset
+user has seen that's on the program users's input list. We then record the
+distance and later modify the distance before placing it in a special data
+structure using k_insert, that only keeps the top k results. This data
+structure contains the k closest users, which is then passed out of the
+function.
+
+
+
+filter.R
+========
+This file contains two important functions. The first, combine_user_favorites()
+takes the output from knn() and then produces a list of all the movies that
+these top k users gave an above-average rating to. The movies are ordered using
+a final score that I produce. The score is the product of the inverse of my
+distance metric and the user's score for that movie. Thus, users with a smaller
+distance metric have ratings that count for more, and their 4.5 or 5.0 ratings
+will be higher up on the ranking list. The ordered_insert() function takes
+care of the task of making sure that the movies are inserted in the order of
+their final calculated scores.
+
+filter_by_genre() takes the output of combine_user_favorites() and asks the
+user if he or she wants to filter results by genre, where the user is given a
+list of all the genres of the films in the outputted list of
+combine_user_favorites(). The output of this function is what finally gets
+sent to main() and represents the final ranked list.
+
+
+test.R
+======
+This script runs the whole process on special datasets to evaluate the quality
+of the recommendations made. It will be discussed in greater detail below.
+
+
+TEST RUN
+================================================================================
+> source('test.R')
+> evaluate()
+
+
+Running TEST 1
+
+Performing collaborative filtering..........
+Selecting from similar user's favorites..........
+TEST 1 returned with an overlap of 0
+
+
+Running TEST 2
+
+Performing collaborative filtering..........
+Selecting from similar user's favorites..........
+TEST 2 returned with an overlap of 0
+
+
+Running TEST 3
+
+Performing collaborative filtering..........
+Selecting from similar user's favorites..
+TEST 3 returned with an overlap of 0
+
+
+Running TEST 4
+
+Performing collaborative filtering..........
+Selecting from similar user's favorites.
+TEST 4 returned with an overlap of 0
+
+
+Running TEST 5
+
+Performing collaborative filtering..........
+Selecting from similar user's favorites....
+TEST 5 returned with an overlap of 0
+
+
+
+
+RESULTS: A DISCUSSSION OF TEST
+================================================================================
+For my evaluation, I created a new ratings.csv, located in
+final_project/datasets/ml-latest-small-test. This one excludes five users.
+These five users have their ratings data split equally, and the five halves
+are placed in the 10 files in final_project/test. For a give test user, half
+of the users ratings are used as input for my recommender pipeline. In test.R,
+my test() function  performs this run. It then looks at the output of the
+recommendation, and then compares it to the other half of the users list of
+ratings that wasn't used for the recommendation. If the recommendation contains
+any movies that have above-average ratings in the other half of the ratings
+data for the given dataset user, I increase the 'overlap' value by 1.
+
+As can be seen from the test run above, there was no overlap, which isn't
+hugely surprising given that building a reliable recommendation system is
+quite challenging, and it's not entirely clear how one would evaluate it.
+It's quite likely at the recommended films would be enjoyed by the dataset
+users. In this sense, an overlap of 0 doesn't correspond to a failure on the
+part of the recommender system, but rather a lack of data on the dataset users.
+
+It was clear from my work on knn.R that as I refined the distance metric,
+the users were closer to the program user. This was a strong indication of the
+validity of my technique.
+
+
+FUTURE DIRECTIONS
+================================================================================
+For me, the best part of the project was starting with a naive Euclidean
+distance metric and watching the quality of the results improve as I fine-tuned
+the calculation of the distance metric. I'm sure that the quality of the
+results would continue to increase with more work directed towards refining
+the distance metric, both in terms of its complexity and its constants.
+
+I also think there is more work to be done in better defining my evaluation
+method. One thing I'd like to try is modifying my split between training and
+test data for the 5 users I picked. I think that using a smaller amount of their
+data in the training section and a larger amount in the testing at the end
+would result in an increased chance in getting overlap. My method also discounts
+the possible overlap that occurs when films the user has already seen are
+recommended, something I discouraged with my own program.
+
+This project certainly did an excellent job at helping my understand the true
+challenge of building recommendation systems, and reacquited me with the art
+and science of fine-tuning parameters in data science projects.
